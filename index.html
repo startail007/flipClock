@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500&family=Open+Sans:ital,wght@1,800&display=swap"
+      rel="stylesheet"
+    />
+    <title>翻牌時鐘</title>
+    <style>
+      :root {
+        --digitSet-width: 80px;
+        --digitSet-height: 100px;
+        --digitSet-gap: 2px;
+        --digitSet-font-size: 60px;
+        --digitSet-font-color: hsl(0, 0%, 100%);
+        --digitSet-color: hsl(0, 0%, 18%);
+        --digitSet-dark-color: hsl(0, 0%, 9%);
+        --digitSet-fixed-left: 8.5px;
+        --digitSet-fixed-width: 5px;
+        --digitSet-fixed-height: 20px;
+        --digitSet-fixed-border: 1px;
+        --digitSet-hole-width: 8px;
+        --digitSet-hole-height: 4px;
+      }
+      @keyframes turn0 {
+        0% {
+          transform: rotateX(0deg);
+          background-color: var(--digitSet-color);
+        }
+        100% {
+          transform: rotateX(-180deg);
+          background-color: var(--digitSet-dark-color);
+        }
+      }
+      @keyframes turn1 {
+        0% {
+          transform: rotateX(180deg);
+          background-color: var(--digitSet-dark-color);
+        }
+        100% {
+          transform: rotateX(0deg);
+          background-color: var(--digitSet-color);
+        }
+      }
+      @keyframes turn2 {
+        0% {
+          z-index: 1;
+        }
+        100% {
+          z-index: 0;
+        }
+      }
+      @keyframes turn3 {
+        0% {
+          z-index: 0;
+        }
+        100% {
+          z-index: 1;
+        }
+      }
+
+      @keyframes shadow {
+        0% {
+          background-position: 0px calc(var(--digitSet-height) * -1);
+        }
+        100% {
+          background-position: 0px 0px;
+        }
+      }
+      body {
+        margin: 0;
+        font-family: "Noto Sans TC", sans-serif;
+      }
+      .content {
+        background-image: linear-gradient(-0deg, rgb(66, 20, 20) 0%, rgb(255, 183, 183) 50%, rgb(223, 194, 194) 100%);
+        background-image: linear-gradient(-35deg, rgb(173, 84, 28) 0%, rgb(230, 196, 59) 50%, rgb(255, 239, 172) 100%);
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        margin: 0px;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+      .text {
+        font-size: 18px;
+        letter-spacing: 5px;
+        text-indent: 5px;
+        margin-bottom: 10px;
+        font-weight: bold;
+        color: #8d2409;
+      }
+      .text::after {
+        content: "";
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 1px;
+        background-color: #8d2409;
+      }
+      .clock {
+      }
+      .hour,
+      .minute,
+      .second {
+        position: relative;
+        display: inline-block;
+        margin: 0px 10px;
+      }
+      .digitSet {
+        position: relative;
+        display: inline-block;
+        width: var(--digitSet-width);
+        height: calc(var(--digitSet-height) + var(--digitSet-gap));
+      }
+      .digit {
+        position: absolute;
+        display: block;
+        width: var(--digitSet-width);
+        height: calc(var(--digitSet-height) + var(--digitSet-gap));
+        perspective: 1000px;
+        /*transform-style: preserve-3d;*/
+        top: 0px;
+        left: 0px;
+        visibility: hidden;
+        /*box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;*/
+      }
+      .digitTop {
+        position: absolute;
+        display: block;
+        width: var(--digitSet-width);
+        height: calc(var(--digitSet-height) * 0.5);
+        overflow: hidden;
+        transform: rotateX(0deg);
+        transform-origin: 50px calc(var(--digitSet-height) * 0.5 + var(--digitSet-gap) * 0.5);
+        backface-visibility: hidden;
+        background-color: var(--digitSet-color);
+        border-radius: 10px 10px 5px 5px;
+        /*box-shadow: 0px 0px 5px #000;*/
+
+        /*background-image: linear-gradient(
+          -25deg,
+          rgba(93, 93, 93, 0.1) 0%,
+          rgba(199, 199, 199, 0.2) 60%,
+          rgba(199, 199, 199, 0.25) 75%,
+          rgba(93, 93, 93, 0) 100%
+        );*/
+      }
+
+      .digitBottom {
+        position: absolute;
+        display: block;
+        width: var(--digitSet-width);
+        height: calc(var(--digitSet-height) * 0.5);
+        overflow: hidden;
+        top: calc(var(--digitSet-height) * 0.5 + var(--digitSet-gap));
+        transform: rotateX(0deg);
+        transform-origin: 50px calc(var(--digitSet-gap) * -0.5);
+        backface-visibility: hidden;
+        background-color: var(--digitSet-color);
+        border-radius: 5px 5px 10px 10px;
+        /*box-shadow: 0px 0px 5px #000;*/
+        /*background-image: linear-gradient(
+          -25deg,
+          rgba(0, 0, 0, 0.5) 0%,
+          rgba(199, 199, 199, 0.2) 60%,
+          rgba(255, 255, 255, 0.25) 75%,
+          rgba(0, 0, 0, 0) 100%
+        );*/
+      }
+      .digit.active .digitTop::after {
+        content: "";
+        position: absolute;
+        display: block;
+        width: var(--digitSet-width);
+        height: calc(var(--digitSet-height) * 0.5);
+        border-radius: 10px 10px 0px 0px;
+        background-image: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.75),
+          rgba(0, 0, 0, 0.75),
+          rgba(0, 0, 0, 0),
+          rgba(0, 0, 0, 0)
+        );
+        background-size: var(--digitSet-width) calc(var(--digitSet-height) * 1.5);
+        background-position: 0px 0px;
+        top: 0px;
+        left: 0px;
+      }
+      .digit.previous .digitBottom::after {
+        content: "";
+        position: absolute;
+        display: block;
+        width: var(--digitSet-width);
+        height: calc(var(--digitSet-height) * 0.5);
+        /*top: calc(var(--digitSet-height) * 0.5 + var(--digitSet-gap));*/
+        border-radius: 0px 0px 10px 10px;
+        background-image: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.75),
+          rgba(0, 0, 0, 0.75),
+          rgba(0, 0, 0, 0),
+          rgba(0, 0, 0, 0)
+        );
+        background-size: var(--digitSet-width) calc(var(--digitSet-height) * 1.5);
+        background-position: 0px calc(var(--digitSet-height) * -1);
+        top: 0px;
+        left: 0px;
+      }
+      .digit.previous {
+        animation-name: turn2;
+        visibility: inherit;
+      }
+      .digit.active {
+        animation-name: turn3;
+        visibility: inherit;
+      }
+      .digit.previous .digitTop {
+        animation-name: turn0;
+      }
+      /*.digit.previous.edge .digitBottom {
+        visibility: hidden;
+      }*/
+      .digit.active .digitBottom {
+        animation-name: turn1;
+      }
+      /*.digit.active.edge .digitTop {
+        visibility: hidden;
+      }*/
+      .digit.previous .digitBottom,
+      .digit.active .digitTop {
+        box-shadow: inset 0.5px 1px 2px rgba(255, 255, 255, 0.25), inset -0.5px -1px 2px rgba(0, 0, 0, 0.5),
+          0px 2px 3px rgba(0, 0, 0, 1), 0px 3px 5px rgba(0, 0, 0, 0.5);
+      }
+      .digit.active .digitBottom,
+      .digit.previous .digitTop {
+        box-shadow: inset 0.5px 1px 2px rgba(255, 255, 255, 0.25), inset -0.5px -1px 2px rgba(0, 0, 0, 0.5);
+      }
+      .digit.active .digitTop::after {
+        animation-name: shadow;
+        animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1);
+      }
+      .digit.previous .digitBottom::after {
+        animation-name: shadow;
+        animation-timing-function: ease-out;
+      }
+      .digit.previous,
+      .digit.active,
+      .digit.previous .digitTop,
+      .digit.active .digitBottom,
+      .digit.active .digitTop::after,
+      .digit.previous .digitBottom::after {
+        animation-duration: 0.7s;
+        animation-iteration-count: 1;
+        animation-fill-mode: forwards;
+      }
+      .digitWrap {
+        font-family: "Open Sans", sans-serif;
+        line-height: var(--digitSet-height);
+        text-align: center;
+        font-size: var(--digitSet-font-size);
+        color: var(--digitSet-font-color);
+        text-shadow: 0px 1px 2px rgba(0, 0, 0, 1);
+      }
+      .digitBottom .digitWrap {
+        margin-top: calc(var(--digitSet-height) * -0.5);
+      }
+
+      @keyframes topFixed_a {
+        0% {
+          height: 0px;
+          border-radius: 0px 0px 0px 0px;
+        }
+        10% {
+          height: calc(var(--digitSet-fixed-height) * 0.4);
+          border-radius: var(--digitSet-fixed-border) var(--digitSet-fixed-border) 0px 0px;
+        }
+        100% {
+          height: var(--digitSet-fixed-height);
+          border-radius: var(--digitSet-fixed-border);
+        }
+      }
+
+      @keyframes bottomFixed_a {
+        0% {
+          top: calc(var(--digitSet-height) * 0.5 + var(--digitSet-gap) * 0.5 - var(--digitSet-fixed-height) * 0.5);
+          height: var(--digitSet-fixed-height);
+          border-radius: var(--digitSet-fixed-border);
+        }
+        90% {
+          top: calc(var(--digitSet-height) * 0.5 + var(--digitSet-gap) * 0.5 + var(--digitSet-fixed-height) * 0.1);
+          height: calc(var(--digitSet-fixed-height) * 0.4);
+          border-radius: 0px 0px var(--digitSet-fixed-border) var(--digitSet-fixed-border);
+        }
+        100% {
+          top: calc(var(--digitSet-height) * 0.5 + var(--digitSet-gap) * 0.5 + var(--digitSet-fixed-height) * 0.5);
+          height: 0px;
+          border-radius: 0px 0px 0px 0px;
+        }
+      }
+
+      .digit.previous .leftFixed,
+      .digit.active .leftFixed,
+      .digit.active .rightFixed,
+      .digit.previous .rightFixed {
+        position: absolute;
+        display: block;
+        width: var(--digitSet-fixed-width);
+        height: var(--digitSet-fixed-height);
+        /*background-color: rgb(63, 63, 63);*/
+        top: calc(var(--digitSet-height) * 0.5 + var(--digitSet-gap) * 0.5 - var(--digitSet-fixed-height) * 0.5);
+        animation-duration: 0.7s;
+        animation-iteration-count: 1;
+        animation-fill-mode: forwards;
+        border-radius: var(--digitSet-fixed-border);
+        background-image: linear-gradient(to bottom, rgb(226, 154, 20), rgba(243, 234, 217, 0), rgb(80, 25, 14)),
+          linear-gradient(to right, rgb(136, 61, 11), rgb(255, 167, 5), rgb(136, 61, 11));
+        background-size: 100% 100%;
+        box-shadow: 0px 1px 3px rgba(0, 0, 0, 1);
+      }
+      .digit.active .leftFixed,
+      .digit.active .rightFixed {
+        animation-name: topFixed_a;
+      }
+      .digit.previous .leftFixed,
+      .digit.previous .rightFixed {
+        animation-name: bottomFixed_a;
+      }
+
+      .digit.active .leftFixed,
+      .digit.previous .leftFixed {
+        left: calc(var(--digitSet-fixed-left) - var(--digitSet-fixed-width) * 0.5);
+      }
+      .digit.active .rightFixed,
+      .digit.previous .rightFixed {
+        right: calc(var(--digitSet-fixed-left) - var(--digitSet-fixed-width) * 0.5);
+      }
+
+      .digitHole {
+        position: absolute;
+        display: block;
+        width: var(--digitSet-width);
+        height: calc(var(--digitSet-height) * 0.5);
+        top: 0px;
+        left: 0px;
+      }
+      .digitBottom .digitHole::before,
+      .digitBottom .digitHole::after,
+      .digitTop .digitHole::before,
+      .digitTop .digitHole::after {
+        content: "";
+        position: absolute;
+        display: block;
+        width: var(--digitSet-hole-width);
+        height: var(--digitSet-hole-height);
+        border-radius: 1px;
+        background-image: radial-gradient(#000 50%, rgb(22, 22, 22) 70%);
+        background-size: 8px 8px;
+        background-position: center;
+      }
+      .digitBottom .digitHole::before,
+      .digitBottom .digitHole::after {
+        top: calc(var(--digitSet-fixed-height) * 0.5 - var(--digitSet-gap) * 0.5 - var(--digitSet-hole-height) * 0.5);
+      }
+      .digitTop .digitHole::before,
+      .digitTop .digitHole::after {
+        bottom: calc(
+          var(--digitSet-fixed-height) * 0.5 - var(--digitSet-gap) * 0.5 - var(--digitSet-hole-height) * 0.5
+        );
+      }
+      .digitTop .digitHole::before,
+      .digitBottom .digitHole::before {
+        left: calc(var(--digitSet-fixed-left) - var(--digitSet-hole-width) * 0.5);
+      }
+      .digitTop .digitHole::after,
+      .digitBottom .digitHole::after {
+        right: calc(var(--digitSet-fixed-left) - var(--digitSet-hole-width) * 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <!--<div class="digitSet">
+      <div class="digit previous">
+        <div class="digitTop">
+          <div class="digitWrap">
+            0
+          </div>
+        </div>
+        <div class="digitBottom">
+          <div class="digitWrap">
+            0
+          </div>
+        </div>
+      </div>
+      <div class="digit active">
+        <div class="digitTop">
+          <div class="digitWrap">
+            1
+          </div>
+        </div>
+        <div class="digitBottom">
+          <div class="digitWrap">
+            1
+          </div>
+        </div>
+      </div>
+    </div>-->
+    <div class="content">
+      <div class="text">現在時間</div>
+      <div class="clock">
+        <div class="hour">
+          <div class="digitSet ten"></div>
+          <div class="digitSet unit"></div>
+        </div>
+        <div class="minute">
+          <div class="digitSet ten"></div>
+          <div class="digitSet unit"></div>
+        </div>
+        <div class="second">
+          <div class="digitSet ten"></div>
+          <div class="digitSet unit"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        function createDigit(number) {
+          var digit = document.createElement("div");
+          digit.className = "digit";
+          var s = "";
+          s += '<div class="digitTop"><div class="digitWrap">' + number + '</div><div class="digitHole"></div></div>';
+          s +=
+            '<div class="digitBottom"><div class="digitWrap">' + number + '</div><div class="digitHole"></div></div>';
+          s += '<div class="leftFixed"></div>';
+          s += '<div class="rightFixed"></div>';
+          digit.innerHTML = s;
+          return digit;
+        }
+        function digitSetReset(digitSet) {
+          for (var i = 0; i < 10; i++) {
+            digitSet.appendChild(createDigit(i));
+          }
+          digitSet.appendChild(createDigit(""));
+        }
+        function change(digitSet, oldNumber, number) {
+          if (oldNumber !== number) {
+            var digitList = digitSet.querySelectorAll(".digit");
+            var digitActive = digitSet.querySelector(".digit.active");
+            if (digitActive) {
+              digitActive.classList.remove("active");
+            }
+            var digitPrevious = digitSet.querySelector(".digit.previous");
+            if (digitPrevious) {
+              digitPrevious.classList.remove("previous");
+            }
+            if (oldNumber !== "") {
+              digitList[oldNumber].classList.add("previous");
+            } else {
+              digitList[10].classList.add("previous");
+              digitList[10].classList.add("edge");
+            }
+            if (number !== "") {
+              digitList[number].classList.add("active");
+            } else {
+              digitList[10].classList.add("active");
+              digitList[10].classList.add("edge");
+            }
+          }
+        }
+        var hour_digitSet_ten = document.querySelector(".hour .digitSet.ten");
+        var hour_digitSet_unit = document.querySelector(".hour .digitSet.unit");
+        var minute_digitSet_ten = document.querySelector(".minute .digitSet.ten");
+        var minute_digitSet_unit = document.querySelector(".minute .digitSet.unit");
+        var second_digitSet_ten = document.querySelector(".second .digitSet.ten");
+        var second_digitSet_unit = document.querySelector(".second .digitSet.unit");
+        /*digitSetReset(hour_digitSet_ten);
+        digitSetReset(hour_digitSet_unit);
+        digitSetReset(minute_digitSet_ten);
+        digitSetReset(minute_digitSet_unit);
+        digitSetReset(second_digitSet_ten);
+        digitSetReset(second_digitSet_unit);*/
+        var digitSetList = [
+          hour_digitSet_ten,
+          hour_digitSet_unit,
+          minute_digitSet_ten,
+          minute_digitSet_unit,
+          second_digitSet_ten,
+          second_digitSet_unit,
+        ];
+        digitSetList.forEach(function (el) {
+          digitSetReset(el);
+        });
+        function getTime() {
+          var date = new Date();
+          var hour = date.getHours();
+          var minute = date.getMinutes();
+          var second = date.getSeconds();
+          hour = (hour < 10 ? "0" : "") + hour;
+          minute = (minute < 10 ? "0" : "") + minute;
+          second = (second < 10 ? "0" : "") + second;
+          return hour + minute + second;
+        }
+
+        var prevTime = "";
+        var time = "";
+        function update() {
+          prevTime = time;
+          time = getTime();
+          digitSetList.forEach(function (el, i) {
+            change(el, prevTime.charAt(i), time.charAt(i));
+          });
+        }
+        setInterval(update, 1000);
+        update();
+      })();
+    </script>
+  </body>
+</html>
